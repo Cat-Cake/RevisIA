@@ -1,0 +1,146 @@
+.flash {
+  padding: 48px 34px;
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 94px);
+}
+
+.flash__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 460px;
+}
+.flash__label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ---------- Carte 3D (flip) ---------- */
+.card3d {
+  width: 100%;
+  height: 240px;
+  margin-bottom: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  perspective: 1400px;
+}
+.card3d__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 28px;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+  box-shadow: 0 20px 44px -22px rgba(127, 106, 222, 0.6);
+}
+.card3d__front {
+  color: #fff;
+  background: linear-gradient(150deg, #8b6fe0, #a879e0);
+  transform: rotateY(0deg);
+}
+.card3d__back {
+  color: #fff;
+  background: linear-gradient(150deg, #7f6ade, #9a6ad6);
+  transform: rotateY(180deg);
+}
+.card3d.is-flipped .card3d__front { transform: rotateY(-180deg); }
+.card3d.is-flipped .card3d__back { transform: rotateY(0deg); }
+
+.card3d__tag {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.card3d__text {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  text-align: center;
+}
+.card3d__hint { font-size: 0.76rem; opacity: 0.8; }
+
+/* ---------- Compteur + actions ---------- */
+.flash__count { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+.flash__actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 22px;
+}
+.flash__btn { flex: 1; }
+.flash__btn--review {
+  color: #c67016;
+  border-color: #f3ddb8;
+  background: #fdf6ea;
+}
+.flash__btn--review:hover { border-color: #e9a13b; }
+.flash__btn--ok {
+  color: #fff;
+  background: #2bb673;
+}
+.flash__btn--ok:hover { background: #24a065; }
+
+/* ---------- Barre de progression ---------- */
+.flash__progress {
+  width: 100%;
+  height: 6px;
+  background: #ece9fb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.flash__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8b6fe0, #a879e0);
+  transition: width 0.3s ease;
+}
+
+/* ---------- Écran de fin ---------- */
+.flash__done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 400px;
+}
+.flash__done-badge {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 18px;
+  font-size: 1.6rem;
+  color: #fff;
+  background: #2bb673;
+  border-radius: 50%;
+}
+.flash__done h2 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+.flash__done p { color: var(--muted); margin-bottom: 24px; }
+.flash__done-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+@media (max-width: 560px) {
+  .topbar { padding: 20px; }
+  .flash { padding: 28px 20px; }
+}

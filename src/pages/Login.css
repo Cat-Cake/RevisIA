@@ -1,0 +1,190 @@
+.login {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100%;
+}
+
+/* ---------- Panneau gauche ---------- */
+.panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 56px;
+  color: #fff;
+  background: linear-gradient(150deg, var(--coral-1) 0%, var(--coral-2) 100%);
+}
+
+.panel__blob {
+  position: absolute;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+.panel__blob--tr { width: 160px; height: 160px; top: 48px; right: -40px; transform: rotate(12deg); }
+.panel__blob--bl { width: 130px; height: 130px; bottom: 40px; left: 40%; border-radius: 50%; }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  z-index: 1;
+}
+.brand__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.2);
+}
+.brand__name { font-size: 1.05rem; letter-spacing: -0.01em; }
+
+.panel__copy { z-index: 1; max-width: 27ch; }
+
+.headline {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.1rem, 3.2vw, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+
+.subhead {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 40ch;
+}
+
+.chips {
+  list-style: none;
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(2px);
+}
+.chip__icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+}
+
+.panel__foot {
+  z-index: 1;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Panneau droit ---------- */
+.form-panel {
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  background: var(--cream);
+}
+
+.form { width: 100%; max-width: 340px; }
+
+.form__head { margin-bottom: 28px; }
+.form__head h2 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.form__head p { color: var(--muted); font-size: 0.92rem; }
+
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.94rem;
+  color: var(--ink);
+  background: var(--field-bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input::placeholder { color: #c3b8b1; }
+.field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(242, 107, 78, 0.15);
+}
+.field__aux {
+  display: block;
+  margin-top: 8px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+.field__aux:hover { text-decoration: underline; }
+
+.submit {
+  width: 100%;
+  padding: 13px;
+  margin-top: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+.submit:hover { background: var(--primary-hover); }
+.submit:active { transform: translateY(1px); }
+.submit:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.switch {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.switch a { color: var(--primary); font-weight: 500; text-decoration: none; }
+.switch a:hover { text-decoration: underline; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 820px) {
+  .login { grid-template-columns: 1fr; }
+  .panel {
+    padding: 32px 28px;
+    gap: 28px;
+    min-height: auto;
+  }
+  .panel__foot { display: none; }
+  .form-panel { padding: 40px 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
