@@ -3,54 +3,86 @@ import { Link, useParams } from 'react-router-dom'
 import { BellIcon, FileIcon, CardsIcon, CheckIcon, SparkIcon } from '../components/icons.jsx'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
-import { ApiError } from '../services/apiClient.js'
 import './DocumentDetail.css'
+
+const GENERATION_POLL_INTERVAL = 5000
 
 export default function DocumentDetail() {
   const { id } = useParams()
   const [doc, setDoc] = useState(null)
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [summaryLoading, setSummaryLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // 'checking' | 'none' | 'generating' | 'ready' | 'error'
+  const [summaryStatus, setSummaryStatus] = useState('checking')
+  const [summaryError, setSummaryError] = useState(null)
+
   useEffect(() => {
-    let cancelled = false
+    let stopped = false
+    let timer = null
     setLoading(true)
     setError(null)
-    documentService.getById(id)
-      .then((data) => { if (!cancelled) setDoc(data) })
-      .catch((err) => { if (!cancelled) setError(err.message || 'Document introuvable.') })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+
+    function poll() {
+      documentService.getById(id)
+        .then((data) => {
+          if (stopped) return
+          const document = data?.document ?? data
+          setDoc(document)
+          if (document?.generationEnCours) {
+            timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
+          }
+        })
+        .catch((err) => { if (!stopped) setError(err.message || 'Document introuvable.') })
+        .finally(() => { if (!stopped) setLoading(false) })
+    }
+
+    poll()
+    return () => { stopped = true; clearTimeout(timer) }
   }, [id])
 
   useEffect(() => {
     let cancelled = false
-    setSummaryLoading(true)
+    setSummaryStatus('checking')
     generationService.getSummary(id)
-      .then((data) => { if (!cancelled) setSummary(data) })
-      .catch(async (err) => {
-        if (err instanceof ApiError && err.status === 404) {
-          try {
-            const data = await generationService.generateSummary(id)
-            if (!cancelled) setSummary(data)
-          } catch {
-            // La génération a échoué, on laisse le panneau vide.
-          }
+      .then((data) => {
+        if (cancelled) return
+        if (!data?.court && !data?.detaille) {
+          setSummaryStatus('none')
+        } else {
+          setSummary(data)
+          setSummaryStatus('ready')
         }
       })
-      .finally(() => { if (!cancelled) setSummaryLoading(false) })
+      .catch((err) => {
+        if (cancelled) return
+        setSummaryError(err.message || 'Impossible de vérifier le résumé.')
+        setSummaryStatus('error')
+      })
     return () => { cancelled = true }
   }, [id])
+
+  async function handleGenerateSummary() {
+    setSummaryStatus('generating')
+    setSummaryError(null)
+    try {
+      const data = await generationService.generateSummary(id)
+      setSummary(data)
+      setSummaryStatus('ready')
+    } catch (err) {
+      setSummaryError(err.message || 'La génération du résumé a échoué.')
+      setSummaryStatus('error')
+    }
+  }
 
   if (loading) return <p className="detail__status">Chargement…</p>
   if (error) return <p className="detail__status detail__status--error">{error}</p>
   if (!doc) return null
 
   const name = doc.nom || doc.titre || doc.name
-  const shortSummary = summary?.resume_court || summary?.court || summary?.short
-  const detailedSummary = summary?.resume_detaille || summary?.detaille || summary?.detailed
+  const shortSummary = summary?.court?.contenu
+  const detailedSummary = summary?.detaille?.contenu
   const extractedText = doc.texte || doc.texte_extrait || doc.contenu
 
   return (
@@ -81,16 +113,49 @@ export default function DocumentDetail() {
             {/* Résumé */}
             <section className="panel">
               <div className="panel__head"><h3>Résumé</h3></div>
-              {summaryLoading && <p className="detail__summary">Génération du résumé…</p>}
-              {!summaryLoading && shortSummary && <p className="detail__summary">{shortSummary}</p>}
-              {!summaryLoading && !shortSummary && <p className="detail__summary">Résumé indisponible.</p>}
-              {!summaryLoading && detailedSummary && (
-                <details className="detail__summary-more">
-                  <summary>Voir le résumé détaillé</summary>
-                  <p className="detail__summary">{detailedSummary}</p>
-                </details>
+
+              {summaryStatus === 'checking' && (
+                <p className="detail__summary">Vérification du résumé…</p>
+              )}
+
+              {summaryStatus === 'none' && (
+                <div className="detail__summary">
+                  <p>Aucun résumé n'a encore été généré pour ce document.</p>
+                  <button className="btn btn--primary btn--sm" onClick={handleGenerateSummary}>
+                    <SparkIcon /> Générer le résumé
+                  </button>
+                </div>
+              )}
+
+              {summaryStatus === 'generating' && (
+                <p className="detail__summary">Génération du résumé en cours… cela peut prendre une minute.</p>
+              )}
+
+              {summaryStatus === 'error' && (
+                <div className="detail__summary">
+                  <p className="detail__status--error">{summaryError}</p>
+                  <button className="btn btn--ghost btn--sm" onClick={handleGenerateSummary}>Réessayer</button>
+                </div>
+              )}
+
+              {summaryStatus === 'ready' && (
+                <>
+                  <p className="detail__summary">{shortSummary || 'Résumé indisponible.'}</p>
+                  {detailedSummary && (
+                    <details className="detail__summary-more">
+                      <summary>Voir le résumé détaillé</summary>
+                      <p className="detail__summary">{detailedSummary}</p>
+                    </details>
+                  )}
+                </>
               )}
             </section>
+
+            {doc.generationEnCours && (
+              <p className="detail__status">
+                Les flashcards et le quiz sont en cours de génération par l'IA…
+              </p>
+            )}
 
             {/* Cartes d'action */}
             <div className="detail__actions">

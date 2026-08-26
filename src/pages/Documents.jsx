@@ -4,6 +4,8 @@ import { BellIcon, PlusIcon, DotsIcon, FileIcon } from '../components/icons.jsx'
 import { documentService } from '../services/documentService.js'
 import './Documents.css'
 
+const GENERATION_POLL_INTERVAL = 5000
+
 export default function Documents() {
   const [docs, setDocs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -15,12 +17,24 @@ export default function Documents() {
     setLoading(true)
     setError(null)
     documentService.list()
-      .then((data) => setDocs(Array.isArray(data) ? data : data?.results || []))
+      .then((data) => setDocs(Array.isArray(data) ? data : data?.documents || []))
       .catch((err) => setError(err.message || 'Impossible de charger les documents.'))
       .finally(() => setLoading(false))
   }
 
   useEffect(loadDocs, [])
+
+  const hasGenerationInProgress = docs.some((d) => d.generationEnCours)
+
+  useEffect(() => {
+    if (!hasGenerationInProgress) return
+    const timer = setTimeout(() => {
+      documentService.list()
+        .then((data) => setDocs(Array.isArray(data) ? data : data?.documents || []))
+        .catch(() => {})
+    }, GENERATION_POLL_INTERVAL)
+    return () => clearTimeout(timer)
+  }, [hasGenerationInProgress, docs])
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -90,6 +104,11 @@ export default function Documents() {
                   <span className="doc-card__thumb doc-card__thumb--a">
                     <FileIcon />
                   </span>
+                  {d.generationEnCours && (
+                    <span className="doc-card__badge">
+                      <span className="doc-card__badge-dot" /> Génération en cours…
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="doc-card__name">{d.nom || d.titre || d.name}</h3>

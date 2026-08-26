@@ -19,7 +19,7 @@ export default function Dashboard() {
       .then(([statsData, docs]) => {
         if (cancelled) return
         setStats(statsData)
-        setRecentDocs((Array.isArray(docs) ? docs : docs?.results || []).slice(0, 3))
+        setRecentDocs((Array.isArray(docs) ? docs : docs?.documents || []).slice(0, 3))
       })
       .catch((err) => { if (!cancelled) setError(err.message || 'Impossible de charger le tableau de bord.') })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -27,13 +27,22 @@ export default function Dashboard() {
   }, [])
 
   const statCards = stats ? [
-    { icon: <DocsIcon />, value: stats.nb_documents ?? 0, label: 'Documents importés' },
-    { icon: <CheckIcon />, value: stats.nb_quiz ?? 0, label: 'Quiz terminés' },
-    { icon: <ChartIcon />, value: `${stats.score_moyen ?? 0} %`, label: 'Score moyen' },
+    { icon: <DocsIcon />, value: stats.nombreDocuments ?? 0, label: 'Documents importés' },
+    { icon: <CheckIcon />, value: stats.nombreQuizRealises ?? 0, label: 'Quiz terminés' },
+    { icon: <ChartIcon />, value: stats.scoreMoyen == null ? '—' : `${stats.scoreMoyen} %`, label: 'Score moyen' },
   ] : []
 
-  const activity = stats?.activite_recente ?? []
+  const activity = stats?.dernieresActivites ?? []
   const inProgress = recentDocs[0]
+
+  function activityLabel(a) {
+    if (a.type === 'import_document') return `Import de « ${a.nom} »`
+    if (a.type === 'quiz_realise') {
+      const pct = a.total ? Math.round((a.score / a.total) * 100) : 0
+      return `Quiz terminé — ${a.score}/${a.total} (${pct} %)`
+    }
+    return ''
+  }
 
   return (
     <>
@@ -99,7 +108,7 @@ export default function Dashboard() {
                   {activity.map((a, i) => (
                     <li className="activity__row" key={i}>
                       <span className="activity__dot activity__dot--progress" />
-                      <span>{a.description || a.message || a.text}</span>
+                      <span>{activityLabel(a)}</span>
                     </li>
                   ))}
                 </ul>

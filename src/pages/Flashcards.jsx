@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
-import { ApiError } from '../services/apiClient.js'
 import './Flashcards.css'
+
+const GENERATION_POLL_INTERVAL = 4000
 
 function cardQuestion(c) {
   return c.question || c.q || c.recto
@@ -23,35 +24,51 @@ export default function Flashcards() {
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [done, setDone] = useState(false)
+  const [bgGenerating, setBgGenerating] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     documentService.getById(id)
-      .then((doc) => setDocName(doc.nom || doc.titre || doc.name || ''))
+      .then((data) => setDocName((data?.document ?? data)?.nom || ''))
       .catch(() => {})
   }, [id])
 
   useEffect(() => {
-    let cancelled = false
+    let stopped = false
+    let timer = null
     setLoading(true)
     setError(null)
-    generationService.getFlashcards(id)
-      .then((data) => { if (!cancelled) setCards(data.flashcards || data || []) })
-      .catch(async (err) => {
-        if (err instanceof ApiError && err.status === 404) {
-          try {
-            const data = await generationService.generateFlashcards(id)
-            if (!cancelled) setCards(data.flashcards || data || [])
-            return
-          } catch (genErr) {
-            if (!cancelled) setError(genErr.message || 'Impossible de générer les flashcards.')
-            return
+
+    function poll() {
+      generationService.getFlashcards(id)
+        .then((data) => {
+          if (stopped) return
+          setCards(data?.flashcards || [])
+          setBgGenerating(!!data?.generationEnCours)
+          if (data?.generationEnCours) {
+            timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
           }
-        }
-        if (!cancelled) setError(err.message || 'Impossible de charger les flashcards.')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+        })
+        .catch((err) => { if (!stopped) setError(err.message || 'Impossible de charger les flashcards.') })
+        .finally(() => { if (!stopped) setLoading(false) })
+    }
+
+    poll()
+    return () => { stopped = true; clearTimeout(timer) }
   }, [id])
+
+  async function handleGenerate() {
+    setGenerating(true)
+    setError(null)
+    try {
+      const data = await generationService.generateFlashcards(id)
+      setCards(data?.flashcards || [])
+    } catch (err) {
+      setError(err.message || 'Impossible de générer les flashcards.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const card = cards[index]
   const isLast = index === cards.length - 1
@@ -73,8 +90,23 @@ export default function Flashcards() {
   }
 
   if (loading) return <p className="detail__status">Chargement des flashcards…</p>
-  if (error) return <p className="detail__status detail__status--error">{error}</p>
-  if (cards.length === 0) return <p className="detail__status">Aucune flashcard disponible.</p>
+
+  if (cards.length === 0) {
+    return (
+      <div className="detail__status">
+        {generating || bgGenerating ? (
+          <p>Génération des flashcards en cours… cela peut prendre une minute.</p>
+        ) : (
+          <>
+            <p>{error || "Aucune flashcard n'a encore été générée pour ce document."}</p>
+            <button className="btn btn--primary btn--sm" onClick={handleGenerate}>
+              {error ? 'Réessayer' : 'Générer les flashcards'}
+            </button>
+          </>
+        )}
+      </div>
+    )
+  }
 
   return (
     <>

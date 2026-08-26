@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
-import { ApiError } from '../services/apiClient.js'
 import { TickIcon } from '../components/icons.jsx'
 import './Quiz.css'
+
+const GENERATION_POLL_INTERVAL = 4000
 
 function questionText(q) {
   return q.question || q.enonce || q.texte || q.text
 }
 
 function questionOptions(q) {
-  return q.options || q.choix || q.reponses_possibles || []
+  return q.propositions || q.options || q.choix || q.reponses_possibles || []
 }
 
 export default function Quiz() {
@@ -27,35 +28,51 @@ export default function Quiz() {
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState(null)
+  const [bgGenerating, setBgGenerating] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     documentService.getById(id)
-      .then((doc) => setDocName(doc.nom || doc.titre || doc.name || ''))
+      .then((data) => setDocName((data?.document ?? data)?.nom || ''))
       .catch(() => {})
   }, [id])
 
   useEffect(() => {
-    let cancelled = false
+    let stopped = false
+    let timer = null
     setLoading(true)
     setError(null)
-    generationService.getQuiz(id)
-      .then((data) => { if (!cancelled) setQuestions(data.questions || data || []) })
-      .catch(async (err) => {
-        if (err instanceof ApiError && err.status === 404) {
-          try {
-            const data = await generationService.generateQuiz(id)
-            if (!cancelled) setQuestions(data.questions || data || [])
-            return
-          } catch (genErr) {
-            if (!cancelled) setError(genErr.message || 'Impossible de générer le quiz.')
-            return
+
+    function poll() {
+      generationService.getQuiz(id)
+        .then((data) => {
+          if (stopped) return
+          setQuestions(data?.quiz || [])
+          setBgGenerating(!!data?.generationEnCours)
+          if (data?.generationEnCours) {
+            timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
           }
-        }
-        if (!cancelled) setError(err.message || 'Impossible de charger le quiz.')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+        })
+        .catch((err) => { if (!stopped) setError(err.message || 'Impossible de charger le quiz.') })
+        .finally(() => { if (!stopped) setLoading(false) })
+    }
+
+    poll()
+    return () => { stopped = true; clearTimeout(timer) }
   }, [id])
+
+  async function handleGenerate() {
+    setGenerating(true)
+    setError(null)
+    try {
+      const data = await generationService.generateQuiz(id)
+      setQuestions(data?.quiz || [])
+    } catch (err) {
+      setError(err.message || 'Impossible de générer le quiz.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const question = questions[current]
   const answered = selected !== null
@@ -96,8 +113,23 @@ export default function Quiz() {
   }
 
   if (loading) return <p className="detail__status">Chargement du quiz…</p>
-  if (error && !result) return <p className="detail__status detail__status--error">{error}</p>
-  if (!loading && questions.length === 0) return <p className="detail__status">Aucune question disponible.</p>
+
+  if (questions.length === 0 && !result) {
+    return (
+      <div className="detail__status">
+        {generating || bgGenerating ? (
+          <p>Génération du quiz en cours… cela peut prendre une minute.</p>
+        ) : (
+          <>
+            <p>{error || "Aucun quiz n'a encore été généré pour ce document."}</p>
+            <button className="btn btn--primary btn--sm" onClick={handleGenerate}>
+              {error ? 'Réessayer' : 'Générer le quiz'}
+            </button>
+          </>
+        )}
+      </div>
+    )
+  }
 
   if (result) {
     const corrections = result.correction || result.corrections || []
