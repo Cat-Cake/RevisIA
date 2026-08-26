@@ -29,6 +29,7 @@
 .iconbtn:hover { color: var(--primary); border-color: var(--primary); }
 
 .dash { padding: 30px 34px 48px; }
+.dash__error { color: #d92d20; }
 
 /* ---------- Stat cards ---------- */
 .stat-cards {

@@ -1,6 +1,7 @@
 .topbar__actions { display: flex; align-items: center; gap: 12px; }
 
 .docs { padding: 30px 34px 48px; }
+.docs__error { color: #d92d20; }
 
 .docs__grid {
   display: grid;

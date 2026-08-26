@@ -90,6 +90,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.sidebar__logout {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 4px;
+}
+.sidebar__logout:hover { color: #fff; text-decoration: underline; }
 
 /* ---------- Content ---------- */
 .content { min-width: 0; color: var(--ink); }

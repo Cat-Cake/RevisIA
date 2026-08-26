@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { authService } from '../services/authService.js'
 import './Login.css'
 
 const features = [
@@ -8,14 +9,29 @@ const features = [
 ]
 
 export default function Login() {
+  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
-  function handleSubmit() {
-    // TODO: brancher sur l'API d'authentification, puis rediriger
-    console.log({ email, password })
-    navigate('/app')
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      if (mode === 'register') {
+        await authService.register({ nom, email, mot_de_passe: password })
+      }
+      await authService.login({ email, mot_de_passe: password })
+      navigate('/app')
+    } catch (err) {
+      setError(err.message || 'Une erreur est survenue.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -54,11 +70,30 @@ export default function Login() {
 
       {/* Panneau de droite : formulaire */}
       <main className="form-panel">
-        <div className="form">
+        <form className="form" onSubmit={handleSubmit}>
           <header className="form__head">
-            <h2>Bon retour !</h2>
-            <p>Connecte-toi pour continuer ta préparation.</p>
+            <h2>{mode === 'login' ? 'Bon retour !' : 'Crée ton compte'}</h2>
+            <p>
+              {mode === 'login'
+                ? 'Connecte-toi pour continuer ta préparation.'
+                : 'Quelques infos et tu es prêt à réviser.'}
+            </p>
           </header>
+
+          {mode === 'register' && (
+            <div className="field">
+              <label htmlFor="nom">Nom</label>
+              <input
+                id="nom"
+                type="text"
+                autoComplete="name"
+                placeholder="Ton nom"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                required
+              />
+            </div>
+          )}
 
           <div className="field">
             <label htmlFor="email">Adresse e-mail</label>
@@ -69,6 +104,7 @@ export default function Login() {
               placeholder="toi@exemple.fr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -77,22 +113,31 @@ export default function Login() {
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
-            <a className="field__aux" href="#">Mot de passe oublié ?</a>
+            {mode === 'login' && <a className="field__aux" href="#">Mot de passe oublié ?</a>}
           </div>
 
-          <button className="submit" onClick={handleSubmit}>
-            Se connecter
+          {error && <p className="form__error" role="alert">{error}</p>}
+
+          <button className="submit" type="submit" disabled={loading}>
+            {loading
+              ? 'Chargement…'
+              : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
           </button>
 
           <p className="switch">
-            Pas encore de compte ? <a href="#">Créer un compte</a>
+            {mode === 'login' ? (
+              <>Pas encore de compte ? <a href="#" onClick={(e) => { e.preventDefault(); setMode('register'); setError(null) }}>Créer un compte</a></>
+            ) : (
+              <>Déjà un compte ? <a href="#" onClick={(e) => { e.preventDefault(); setMode('login'); setError(null) }}>Se connecter</a></>
+            )}
           </p>
-        </div>
+        </form>
       </main>
     </div>
   )

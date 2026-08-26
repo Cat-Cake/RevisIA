@@ -5,6 +5,9 @@
   min-height: calc(100vh - 94px);
 }
 
+.detail__status { padding: 30px 34px; font-size: 0.92rem; color: var(--muted); }
+.detail__status--error { color: #d92d20; }
+
 .flash__stage {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,5 @@
 .history { padding: 30px 34px 48px; }
+.history__error { color: #d92d20; }
 
 /* ---------- Stats ---------- */
 .hist-stats {
