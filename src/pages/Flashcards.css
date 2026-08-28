@@ -22,7 +22,6 @@
   text-align: center;
 }
 
-/* ---------- Carte 3D (flip) ---------- */
 .card3d {
   width: 100%;
   height: 240px;
@@ -78,7 +77,6 @@
 }
 .card3d__hint { font-size: 0.76rem; opacity: 0.8; }
 
-/* ---------- Compteur + actions ---------- */
 .flash__count { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
 .flash__actions {
   display: flex;
@@ -99,7 +97,6 @@
 }
 .flash__btn--ok:hover { background: #24a065; }
 
-/* ---------- Barre de progression ---------- */
 .flash__progress {
   width: 100%;
   height: 6px;
@@ -115,7 +112,6 @@
   transition: width 0.3s ease;
 }
 
-/* ---------- Écran de fin ---------- */
 .flash__done {
   display: flex;
   flex-direction: column;
