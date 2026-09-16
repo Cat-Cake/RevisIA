@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { DocsIcon, CheckIcon, ChartIcon, BellIcon, FileIcon } from '../components/icons.jsx'
+import { DocsIcon, CheckIcon, ChartIcon, FileIcon } from '../components/icons.jsx'
 import { dashboardService } from '../services/dashboardService.js'
 import { documentService } from '../services/documentService.js'
 import './Dashboard.css'
+import NotificationBell from '../components/NotificationBell.jsx'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -51,7 +52,7 @@ export default function Dashboard() {
           <h1>Tableau de bord</h1>
           <p>Voici où en sont tes révisions.</p>
         </div>
-        <button className="iconbtn" aria-label="Notifications"><BellIcon /></button>
+        <NotificationBell />
       </header>
 
       <div className="dash">

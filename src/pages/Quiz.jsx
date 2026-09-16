@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
+import { useToast } from '../components/useToast.js'
 import { TickIcon } from '../components/icons.jsx'
 import './Quiz.css'
 
@@ -31,6 +32,10 @@ export default function Quiz() {
   const [bgGenerating, setBgGenerating] = useState(false)
   const [generating, setGenerating] = useState(false)
 
+  const { notify, update, dismiss } = useToast()
+  // Notification persistante tant que l'IA travaille en arrière-plan
+  const bgToastId = useRef(null)
+
   useEffect(() => {
     documentService.getById(id)
       .then((data) => setDocName((data?.document ?? data)?.nom || ''))
@@ -50,7 +55,22 @@ export default function Quiz() {
           setQuestions(data?.quiz || [])
           setBgGenerating(!!data?.generationEnCours)
           if (data?.generationEnCours) {
+            if (bgToastId.current === null) {
+              bgToastId.current = notify({
+                type: 'loading',
+                title: 'Génération du quiz en cours…',
+                message: 'Cela peut prendre une minute, tu peux continuer à naviguer.',
+                duration: 0,
+              })
+            }
             timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
+          } else if (bgToastId.current !== null) {
+            update(bgToastId.current, {
+              type: 'success',
+              title: 'Génération terminée',
+              message: 'Le quiz est prêt.',
+            })
+            bgToastId.current = null
           }
         })
         .catch((err) => { if (!stopped) setError(err.message || 'Impossible de charger le quiz.') })
@@ -58,17 +78,37 @@ export default function Quiz() {
     }
 
     poll()
-    return () => { stopped = true; clearTimeout(timer) }
-  }, [id])
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+      if (bgToastId.current !== null) {
+        dismiss(bgToastId.current)
+        bgToastId.current = null
+      }
+    }
+  }, [id, notify, update, dismiss])
 
   async function handleGenerate() {
     setGenerating(true)
     setError(null)
+    const toastId = notify({
+      type: 'loading',
+      title: 'Génération du quiz en cours…',
+      message: 'Cela peut prendre une minute.',
+      duration: 0,
+    })
     try {
       const data = await generationService.generateQuiz(id)
       setQuestions(data?.quiz || [])
+      update(toastId, {
+        type: 'success',
+        title: 'Génération terminée',
+        message: `Le quiz de ${data?.quiz?.length || 0} questions est prêt.`,
+      })
     } catch (err) {
-      setError(err.message || 'Impossible de générer le quiz.')
+      const message = err.message || 'Impossible de générer le quiz.'
+      setError(message)
+      update(toastId, { type: 'error', title: 'Échec de la génération', message })
     } finally {
       setGenerating(false)
     }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
+import { useToast } from '../components/useToast.js'
 import './Flashcards.css'
 
 const GENERATION_POLL_INTERVAL = 4000
@@ -27,6 +28,10 @@ export default function Flashcards() {
   const [bgGenerating, setBgGenerating] = useState(false)
   const [generating, setGenerating] = useState(false)
 
+  const { notify, update, dismiss } = useToast()
+  // Notification persistante tant que l'IA travaille en arrière-plan
+  const bgToastId = useRef(null)
+
   useEffect(() => {
     documentService.getById(id)
       .then((data) => setDocName((data?.document ?? data)?.nom || ''))
@@ -46,7 +51,22 @@ export default function Flashcards() {
           setCards(data?.flashcards || [])
           setBgGenerating(!!data?.generationEnCours)
           if (data?.generationEnCours) {
+            if (bgToastId.current === null) {
+              bgToastId.current = notify({
+                type: 'loading',
+                title: 'Génération des flashcards en cours…',
+                message: 'Cela peut prendre une minute, tu peux continuer à naviguer.',
+                duration: 0,
+              })
+            }
             timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
+          } else if (bgToastId.current !== null) {
+            update(bgToastId.current, {
+              type: 'success',
+              title: 'Génération terminée',
+              message: 'Les flashcards sont prêtes.',
+            })
+            bgToastId.current = null
           }
         })
         .catch((err) => { if (!stopped) setError(err.message || 'Impossible de charger les flashcards.') })
@@ -54,17 +74,37 @@ export default function Flashcards() {
     }
 
     poll()
-    return () => { stopped = true; clearTimeout(timer) }
-  }, [id])
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+      if (bgToastId.current !== null) {
+        dismiss(bgToastId.current)
+        bgToastId.current = null
+      }
+    }
+  }, [id, notify, update, dismiss])
 
   async function handleGenerate() {
     setGenerating(true)
     setError(null)
+    const toastId = notify({
+      type: 'loading',
+      title: 'Génération des flashcards en cours…',
+      message: 'Cela peut prendre une minute.',
+      duration: 0,
+    })
     try {
       const data = await generationService.generateFlashcards(id)
       setCards(data?.flashcards || [])
+      update(toastId, {
+        type: 'success',
+        title: 'Génération terminée',
+        message: `${data?.flashcards?.length || 0} flashcards sont prêtes.`,
+      })
     } catch (err) {
-      setError(err.message || 'Impossible de générer les flashcards.')
+      const message = err.message || 'Impossible de générer les flashcards.'
+      setError(message)
+      update(toastId, { type: 'error', title: 'Échec de la génération', message })
     } finally {
       setGenerating(false)
     }

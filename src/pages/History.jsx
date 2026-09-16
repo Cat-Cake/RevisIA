@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { BellIcon, FileIcon } from '../components/icons.jsx'
+import { FileIcon } from '../components/icons.jsx'
 import { resultService } from '../services/resultService.js'
 import './History.css'
+import NotificationBell from '../components/NotificationBell.jsx'
 
 function scoreTone(s) {
   if (s >= 85) return 'ok'
@@ -43,7 +44,7 @@ export default function History() {
           <h1>Historique</h1>
           <p>Retrouve tes quiz passés et ta progression.</p>
         </div>
-        <button className="iconbtn" aria-label="Notifications"><BellIcon /></button>
+        <NotificationBell />
       </header>
 
       <div className="history">

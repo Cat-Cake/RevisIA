@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BellIcon, PlusIcon, DotsIcon, FileIcon } from '../components/icons.jsx'
+import { PlusIcon, DotsIcon, FileIcon } from '../components/icons.jsx'
 import { documentService } from '../services/documentService.js'
+import { useToast } from '../components/useToast.js'
 import './Documents.css'
+import NotificationBell from '../components/NotificationBell.jsx'
 
 const GENERATION_POLL_INTERVAL = 5000
 
@@ -12,6 +14,10 @@ export default function Documents() {
   const [error, setError] = useState(null)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
+
+  const { notify, update, dismiss } = useToast()
+  // id de document -> id de la notification « génération en cours »
+  const genToasts = useRef(new Map())
 
   function loadDocs() {
     setLoading(true)
@@ -25,6 +31,45 @@ export default function Documents() {
   useEffect(loadDocs, [])
 
   const hasGenerationInProgress = docs.some((d) => d.generationEnCours)
+
+  // Une notification par document : « en cours » puis « terminée »
+  useEffect(() => {
+    const pending = genToasts.current
+    docs.forEach((d) => {
+      const name = d.nom || d.titre || d.name || 'ce document'
+      if (d.generationEnCours && !pending.has(d.id)) {
+        pending.set(d.id, notify({
+          type: 'loading',
+          title: 'Génération en cours…',
+          message: `L'IA analyse « ${name} » et prépare son contenu de révision.`,
+          duration: 0,
+        }))
+      } else if (!d.generationEnCours && pending.has(d.id)) {
+        update(pending.get(d.id), {
+          type: 'success',
+          title: 'Génération terminée',
+          message: `« ${name} » est prêt à être révisé.`,
+        })
+        pending.delete(d.id)
+      }
+    })
+    // Document supprimé entre-temps : on retire sa notification
+    pending.forEach((toastId, docId) => {
+      if (!docs.some((d) => d.id === docId)) {
+        dismiss(toastId)
+        pending.delete(docId)
+      }
+    })
+  }, [docs, notify, update, dismiss])
+
+  // On quitte la page : plus rien ne viendra conclure les notifications en attente
+  useEffect(() => {
+    const pending = genToasts.current
+    return () => {
+      pending.forEach((toastId) => dismiss(toastId))
+      pending.clear()
+    }
+  }, [dismiss])
 
   useEffect(() => {
     if (!hasGenerationInProgress) return
@@ -42,11 +87,24 @@ export default function Documents() {
     if (!file) return
     setUploading(true)
     setError(null)
+    const toastId = notify({
+      type: 'loading',
+      title: 'Import en cours…',
+      message: `Envoi de « ${file.name} ».`,
+      duration: 0,
+    })
     try {
       await documentService.upload(file)
+      update(toastId, {
+        type: 'info',
+        title: 'Document importé',
+        message: "La génération du contenu par l'IA va démarrer.",
+      })
       loadDocs()
     } catch (err) {
-      setError(err.message || "Échec de l'import du PDF.")
+      const message = err.message || "Échec de l'import du PDF."
+      setError(message)
+      update(toastId, { type: 'error', title: "Échec de l'import", message })
     } finally {
       setUploading(false)
     }
@@ -70,7 +128,7 @@ export default function Documents() {
           <p>Tous tes cours importés, prêts à réviser.</p>
         </div>
         <div className="topbar__actions">
-          <button className="iconbtn" aria-label="Notifications"><BellIcon /></button>
+          <NotificationBell />
           <input
             ref={fileInputRef}
             type="file"

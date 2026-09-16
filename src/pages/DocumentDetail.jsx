@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { BellIcon, FileIcon, CardsIcon, CheckIcon, SparkIcon } from '../components/icons.jsx'
+import { FileIcon, CardsIcon, CheckIcon, SparkIcon } from '../components/icons.jsx'
 import { documentService } from '../services/documentService.js'
 import { generationService } from '../services/generationService.js'
+import { useToast } from '../components/useToast.js'
 import './DocumentDetail.css'
+import NotificationBell from '../components/NotificationBell.jsx'
 
 const GENERATION_POLL_INTERVAL = 5000
 
@@ -18,6 +20,10 @@ export default function DocumentDetail() {
   const [summaryStatus, setSummaryStatus] = useState('checking')
   const [summaryError, setSummaryError] = useState(null)
 
+  const { notify, update, dismiss } = useToast()
+  // Notification persistante de la génération de fond (flashcards + quiz)
+  const bgToastId = useRef(null)
+
   useEffect(() => {
     let stopped = false
     let timer = null
@@ -31,7 +37,22 @@ export default function DocumentDetail() {
           const document = data?.document ?? data
           setDoc(document)
           if (document?.generationEnCours) {
+            if (bgToastId.current === null) {
+              bgToastId.current = notify({
+                type: 'loading',
+                title: 'Génération en cours…',
+                message: `L'IA prépare les flashcards et le quiz de « ${document.nom || document.titre || document.name || 'ce document'} ».`,
+                duration: 0,
+              })
+            }
             timer = setTimeout(poll, GENERATION_POLL_INTERVAL)
+          } else if (bgToastId.current !== null) {
+            update(bgToastId.current, {
+              type: 'success',
+              title: 'Génération terminée',
+              message: 'Les flashcards et le quiz sont prêts.',
+            })
+            bgToastId.current = null
           }
         })
         .catch((err) => { if (!stopped) setError(err.message || 'Document introuvable.') })
@@ -39,8 +60,16 @@ export default function DocumentDetail() {
     }
 
     poll()
-    return () => { stopped = true; clearTimeout(timer) }
-  }, [id])
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+      // On quitte la page : la notification « en cours » n'a plus personne pour la conclure
+      if (bgToastId.current !== null) {
+        dismiss(bgToastId.current)
+        bgToastId.current = null
+      }
+    }
+  }, [id, notify, update, dismiss])
 
   useEffect(() => {
     let cancelled = false
@@ -66,13 +95,26 @@ export default function DocumentDetail() {
   async function handleGenerateSummary() {
     setSummaryStatus('generating')
     setSummaryError(null)
+    const toastId = notify({
+      type: 'loading',
+      title: 'Génération du résumé en cours…',
+      message: 'Cela peut prendre une minute.',
+      duration: 0,
+    })
     try {
       const data = await generationService.generateSummary(id)
       setSummary(data)
       setSummaryStatus('ready')
+      update(toastId, {
+        type: 'success',
+        title: 'Résumé généré',
+        message: 'Le résumé de ce document est prêt à être consulté.',
+      })
     } catch (err) {
-      setSummaryError(err.message || 'La génération du résumé a échoué.')
+      const message = err.message || 'La génération du résumé a échoué.'
+      setSummaryError(message)
       setSummaryStatus('error')
+      update(toastId, { type: 'error', title: 'Échec de la génération', message })
     }
   }
 
@@ -93,7 +135,7 @@ export default function DocumentDetail() {
           <span className="crumb__sep">/</span>
           <h1>{name}</h1>
         </div>
-        <button className="iconbtn" aria-label="Notifications"><BellIcon /></button>
+        <NotificationBell />
       </header>
 
       <div className="detail">
