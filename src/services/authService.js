@@ -20,4 +20,12 @@ export const authService = {
   async me() {
     return apiClient.get('/api/auth/me')
   },
+
+  async updateProfile({ nom, email }) {
+    return apiClient.put('/api/auth/me', { nom, email })
+  },
+
+  async changePassword({ ancien_mot_de_passe, mot_de_passe }) {
+    return apiClient.put('/api/auth/password', { ancien_mot_de_passe, mot_de_passe })
+  },
 }

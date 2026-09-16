@@ -14,6 +14,7 @@ import DocumentDetail from './pages/DocumentDetail.jsx'
 import Quiz from './pages/Quiz.jsx'
 import Flashcards from './pages/Flashcards.jsx'
 import History from './pages/History.jsx'
+import Parametres from './pages/Parametres.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="documents/:id/quiz" element={<Quiz />} />
           <Route path="documents/:id/flashcards" element={<Flashcards />} />
           <Route path="historique" element={<History />} />
+          <Route path="parametres" element={<Parametres />} />
         </Route>
       </Routes>
     </BrowserRouter>
