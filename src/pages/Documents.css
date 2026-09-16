@@ -109,7 +109,6 @@
 .doc-card__cta { flex: 1; }
 .iconbtn--sm { width: 36px; height: 36px; flex-shrink: 0; }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 1040px) {
   .docs__grid { grid-template-columns: repeat(2, 1fr); }
 }

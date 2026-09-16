@@ -15,6 +15,7 @@ import DocumentDetail from './pages/DocumentDetail.jsx'
 import Quiz from './pages/Quiz.jsx'
 import Flashcards from './pages/Flashcards.jsx'
 import History from './pages/History.jsx'
+import Parametres from './pages/Parametres.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -27,17 +28,16 @@ createRoot(document.getElementById('root')).render(
           <Route path="/tarifs" element={<Pricing />} />
           <Route path="/connexion" element={<Login />} />
 
-          {/* App connectée */}
-          <Route path="/app" element={<AppShell />}>
-            <Route index element={<Dashboard />} />
-            <Route path="documents" element={<Documents />} />
-            <Route path="documents/:id" element={<DocumentDetail />} />
-            <Route path="documents/:id/quiz" element={<Quiz />} />
-            <Route path="documents/:id/flashcards" element={<Flashcards />} />
-            <Route path="historique" element={<History />} />
-          </Route>
-        </Routes>
-      </ToastProvider>
+        {/* App connectée */}
+        <Route path="/app" element={<AppShell />}>
+          <Route index element={<Dashboard />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="documents/:id" element={<DocumentDetail />} />
+          <Route path="documents/:id/quiz" element={<Quiz />} />
+          <Route path="documents/:id/flashcards" element={<Flashcards />} />
+          <Route path="historique" element={<History />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   </StrictMode>,
 )

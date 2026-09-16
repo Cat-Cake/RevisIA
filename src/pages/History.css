@@ -1,7 +1,6 @@
 .history { padding: 30px 34px 48px; }
 .history__error { color: #d92d20; }
 
-/* ---------- Stats ---------- */
 .hist-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -25,7 +24,6 @@
 }
 .hist-stat__label { font-size: 0.84rem; color: var(--muted); }
 
-/* ---------- Tableau ---------- */
 .hist-table-wrap { padding: 8px 8px; overflow-x: auto; }
 .hist-table {
   width: 100%;
@@ -67,7 +65,6 @@
 .hist-doc__name { font-weight: 600; color: var(--ink); }
 .hist-muted { color: var(--muted); }
 
-/* ---------- Score ---------- */
 .score {
   padding: 4px 12px;
   font-size: 0.82rem;
@@ -78,7 +75,6 @@
 .score--progress { color: #c67016; background: #fdf0dd; }
 .score--low { color: #c0392b; background: #fdeae5; }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   .hist-stats { grid-template-columns: 1fr; }
 }

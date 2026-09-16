@@ -1,4 +1,3 @@
-/* ---------- Topbar (partagé app) ---------- */
 .topbar {
   display: flex;
   align-items: center;
@@ -31,7 +30,6 @@
 .dash { padding: 30px 34px 48px; }
 .dash__error { color: #d92d20; }
 
-/* ---------- Stat cards ---------- */
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -65,7 +63,6 @@
 }
 .stat-card__label { font-size: 0.82rem; color: var(--muted); }
 
-/* ---------- Resume banner ---------- */
 .resume {
   display: flex;
   align-items: center;
@@ -86,7 +83,6 @@
 .resume p { font-size: 0.9rem; opacity: 0.92; }
 .resume .btn--light { flex-shrink: 0; }
 
-/* ---------- Panels + columns ---------- */
 .dash__cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -113,7 +109,6 @@
 .panel__link { font-size: 0.82rem; color: var(--primary); text-decoration: none; }
 .panel__link:hover { text-decoration: underline; }
 
-/* ---------- Document rows (dashboard) ---------- */
 .doc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .doc-row {
   display: flex;
@@ -145,7 +140,6 @@
 }
 .doc-row__sub { font-size: 0.78rem; color: var(--muted); }
 
-/* ---------- Badges ---------- */
 .badge {
   margin-left: auto;
   padding: 4px 11px;
@@ -159,7 +153,6 @@
 .badge--progress { color: #c67016; background: #fdf0dd; }
 .badge--todo { color: var(--primary); background: #fdece6; }
 
-/* ---------- Activity feed ---------- */
 .activity { list-style: none; display: flex; flex-direction: column; gap: 14px; }
 .activity__row {
   display: flex;
@@ -180,7 +173,6 @@
 .activity__dot--coral { background: var(--primary); }
 .activity__dot--progress { background: #e9a13b; }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 1040px) {
   .stat-cards { grid-template-columns: repeat(2, 1fr); }
   .dash__cols { grid-template-columns: 1fr; }
