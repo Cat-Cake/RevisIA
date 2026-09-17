@@ -18,11 +18,13 @@ export const authService = {
   },
 
   async me() {
-    return apiClient.get('/api/auth/me')
+    const data = await apiClient.get('/api/auth/me')
+    return data?.user ?? data
   },
 
   async updateProfile({ nom, email }) {
-    return apiClient.put('/api/auth/me', { nom, email })
+    const data = await apiClient.put('/api/auth/me', { nom, email })
+    return data?.user ?? data
   },
 
   async changePassword({ ancien_mot_de_passe, mot_de_passe }) {

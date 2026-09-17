@@ -34,7 +34,8 @@ async function request(path, { method = 'GET', body, headers, ...options } = {})
     : await response.text()
 
   if (!response.ok) {
-    const message = (data && data.message) || response.statusText
+    // L'API renvoie les erreurs sous la forme { error: { message, status } }
+    const message = data?.error?.message || data?.message || response.statusText
     throw new ApiError(message, response.status, data)
   }
 

@@ -172,9 +172,20 @@ export default function Documents() {
                 <h3 className="doc-card__name">{d.nom || d.titre || d.name}</h3>
 
                 <div className="doc-card__foot">
-                  <Link to={`/app/documents/${d.id}`} className="btn btn--primary btn--sm doc-card__cta">
-                    Réviser
-                  </Link>
+                  {d.generationEnCours ? (
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--sm doc-card__cta"
+                      disabled
+                      title="Disponible une fois la génération terminée"
+                    >
+                      Réviser
+                    </button>
+                  ) : (
+                    <Link to={`/app/documents/${d.id}`} className="btn btn--primary btn--sm doc-card__cta">
+                      Réviser
+                    </Link>
+                  )}
                   <button
                     className="iconbtn iconbtn--sm"
                     aria-label="Supprimer"

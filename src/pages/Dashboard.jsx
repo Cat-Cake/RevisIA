@@ -77,7 +77,13 @@ export default function Dashboard() {
                   <h2>Reprends « {inProgress.nom || inProgress.titre || inProgress.name} »</h2>
                   <p>Continue là où tu t'es arrêté.</p>
                 </div>
-                <Link to={`/app/documents/${inProgress.id}`} className="btn btn--light">Continuer</Link>
+                {inProgress.generationEnCours ? (
+                  <button type="button" className="btn btn--light" disabled title="Disponible une fois la génération terminée">
+                    Génération en cours…
+                  </button>
+                ) : (
+                  <Link to={`/app/documents/${inProgress.id}`} className="btn btn--light">Continuer</Link>
+                )}
               </section>
             )}
 

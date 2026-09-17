@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BellIcon } from '../components/icons.jsx'
 import { authService } from '../services/authService.js'
+import NotificationBell from '../components/NotificationBell.jsx'
 import './Parametres.css'
 
 export default function Parametres() {
@@ -65,7 +65,7 @@ export default function Parametres() {
           <h1>Paramètres</h1>
           <p>Gère ton compte et tes informations personnelles.</p>
         </div>
-        <button className="iconbtn" aria-label="Notifications"><BellIcon /></button>
+        <NotificationBell />
       </header>
 
       <div className="settings">
